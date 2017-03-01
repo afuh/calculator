@@ -1,4 +1,4 @@
-let input = [],
+var input = [],
     calc = [],
     bigScreen = [],
     oper = ["/", "*", "-", "+", "="],
@@ -82,7 +82,7 @@ $(document).on("click", "button", function() {
 
 
 //animations
-$(document).ready(function() {
+$(function() {
     $("#calculator").draggable();
     $("#results, #mini").fadeTo(200, 0.1, function() {
       $(this).fadeTo(100, 1);
@@ -90,7 +90,7 @@ $(document).ready(function() {
 
 
     $("button").click(function () {
-      let hue = 'rgb(' + (Math.floor(Math.random() * 256)) + ',' + (Math.floor(Math.random() * 256)) + ',' + (Math.floor(Math.random() * 256)) + ')';
+      var hue = 'rgb(' + (Math.floor(Math.random() * 256)) + ',' + (Math.floor(Math.random() * 256)) + ',' + (Math.floor(Math.random() * 256)) + ')';
 
       $("body").animate( {
         backgroundColor: hue
