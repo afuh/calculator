@@ -1,115 +1,166 @@
 "use strict";
 
-var calculator = function () {
-    var calc = [],
-        bigScreen = [],
-        oper = ["/", "*", "-", "+", "="],
-        divi = false;
+var app = function () {
+      var calc = [],
+          display = [],
+          operList = ["/", "*", "-", "+", "="],
+          divi = false;
 
-    // Button data input
-    $(document).on("click", "button", function () {
-        //cache DOM
-        var buttonValue = $(this).data("value");
-        var $el = $("#calculator"),
-            $results = $el.find("#results"),
-            $mini = $el.find("#mini"),
-            $button = $el.find("button");
-
-        // Render content in the screens
-        var render = function render(miniScr, bigScr) {
-            $mini.text(miniScr);
-            $results.text(bigScr);
-        };
-        //Clear All
-        var clearAll = function clearAll() {
-            calc = [];
-            divi = false;
-            render(0, 0);
-        };
-        //Check for dots between operators
-        var betweenOperators = function betweenOperators(n) {
-            if (oper.indexOf(n) > -1) {
-                divi = true;
-            } else if (calc.join("").substr(-1) === ".") {
-                divi = false;
+      //Used in the calculator function
+      var evalue = {
+            "prev": [],
+            "next": [],
+            "operator": "",
+            "total": 0,
+            "operation": {
+                  "/": function _(prev, next) {
+                        return prev / next;
+                  },
+                  "*": function _(prev, next) {
+                        return prev * next;
+                  },
+                  "+": function _(prev, next) {
+                        return prev + next;
+                  },
+                  "-": function _(prev, next) {
+                        return prev - next;
+                  }
             }
-        };
+      };
 
-        if (buttonValue === "C") {
-            clearAll();
-        }
+      // Button data input
+      $(document).on("click", "button", function () {
+            //cache DOM
+            var buttonValue = $(this).data("value");
+            var $el = $("#calculator"),
+                $results = $el.find("#results"),
+                $mini = $el.find("#mini"),
+                $button = $el.find("button");
 
-        // First digit must be a number
-        else if (calc.length === 0 && oper.indexOf(buttonValue) > -1) {
-                render("", "T_T");
+            // Render content into the displays
+            var render = function render(miniD, bigD) {
+                  $mini.text(miniD);
+                  $results.text(bigD);
+            };
+            //Clear All
+            var clearAll = function clearAll() {
+                  calc = [];
+                  divi = false;
+                  evalue.prev = [], evalue.next = [], evalue.operador = "";
+                  render(0, 0);
+            };
+            //Check for dots between operators
+            var betweenOperators = function betweenOperators(n) {
+                  if (operList.indexOf(n) > -1) {
+                        divi = true;
+                  } else if (calc.join("").substr(-1) === ".") {
+                        divi = false;
+                  }
+            };
+            //The calculator itself
+            var calculator = function calculator(val) {
+                  var n = typeof val === "number" || val === "." || val === "0.";
+
+                  // A number, ".", or "0." will pass through here if there isn't an operator stored.
+                  if (n && evalue.operator.length === 0) {
+                        evalue.prev.push(val);
+                  }
+                  // Do the maths
+                  else if (val === "=" && evalue.prev.length > 0 && evalue.next.length > 0) {
+                              evalue.total = Math.round(evalue.operation[evalue.operator](parseFloat(evalue.prev.join("")), parseFloat(evalue.next.join(""))) * 100) / 100;
+                              evalue.prev = [evalue.total], evalue.next = [], evalue.operator = "";
+                              //render("", evalue.total)
+                        }
+                        // Check in the operator list, if it exist will through here
+                        else if (operList.indexOf(val) >= 0) {
+                                    evalue.operator = val;
+                              }
+                              // A number, ".", or "0." will pass through here if there is an operator.
+                              else if (n && evalue.operator.length > 0) {
+                                          evalue.next.push(val);
+                                    }
+                                    // Reset the calculator
+                                    else if (val === "C") {
+                                                clearAll();
+                                          }
+                  console.log("prev number: " + evalue.prev.join(""), "operator: " + evalue.operator, "next number: " + evalue.next.join(""));
+            };
+
+            // First digit must be a number
+            if (calc.length === 0 && operList.indexOf(buttonValue) > -1) {
+                  buttonValue = "";
+                  render("", "T_T");
             }
 
             // Convert to decimals
-            else if ((calc.length === 0 || oper.indexOf(calc.join("").substr(-1)) > -1) && buttonValue === ".") {
-                    buttonValue = "0.";
-                    calc = calc.concat(buttonValue);
-                    bigScreen = calc.join("");
-                    render(bigScreen);
-                }
+            else if ((calc.length === 0 || operList.indexOf(calc.join("").substr(-1)) > -1) && buttonValue === ".") {
+                        buttonValue = "0.";
+                        calc = calc.concat(buttonValue);
+                        display = calc.join("");
+                        render(display);
+                  }
 
-                // evaluation, total and results
-                else if (buttonValue === "=") {
-                        divi = false;
-                        bigScreen = Math.round(eval(calc.join("")) * 100) / 100; //I know... I know...  evil!!
+                  //  evaluation, total and results
+                  // else if (buttonValue === "=") {
+                  //   divi = false;
+                  //   display = evalue.total
+                  //
+                  //
+                  //   if (display.toString().length <= 7) {
+                  //     calc = [display];
+                  //     render("", display);
+                  //   }
+                  //   else {
+                  //       $mini.css("font-size", "14px");
+                  //       render("to many numbers", "T_T");
+                  //   }
+                  // }
 
-                        if (bigScreen.toString().length <= 7) {
-                            calc = [bigScreen];
-                            render("", bigScreen);
-                        } else {
-                            $mini.css("font-size", "14px");
-                            render("to many numbers", "T_T");
-                        }
-                    }
-
-                    // prevent decimal marks repetition
-                    else if (($results.text().includes(".") || calc.includes(".") || calc.includes("0.")) && divi === false && buttonValue === ".") {
-                            return;
+                  // prevent decimal repetition
+                  else if (($results.text().includes(".") || calc.includes(".") || calc.includes("0.")) && divi === false && buttonValue === ".") {
+                              return;
                         }
                         // prevent zero repetition
                         else if (calc.length === 0 && buttonValue === 0) {
-                                return;
-                            }
-                            // prevent operators repetition
-                            else if (oper.includes(calc.join("").substr(-1)) && oper.indexOf(buttonValue) > -1) {
                                     return;
-                                }
-                                // Screen max chars.
-                                else if (bigScreen.length >= 15) {
-                                        calc = [];
-                                        bigScreen = [];
+                              }
+                              // prevent operator repetition
+                              else if (operList.includes(calc.join("").substr(-1)) && operList.indexOf(buttonValue) > -1) {
+                                          return;
                                     }
+                                    // Screen max chars.
+                                    else if (display.length >= 15) {
+                                                calc = [];
+                                                display = [];
+                                          }
 
-                                    // join the input in one.
-                                    else {
-                                            calc = calc.concat(buttonValue);
-                                            bigScreen = calc.join("");
-                                            render(bigScreen);
-                                        }
+                                          // join them all
+                                          else {
+                                                      calc = calc.concat(buttonValue);
+                                                      display = calc.join("");
+                                                      render(display);
+                                                }
 
-        betweenOperators(buttonValue);
-    }); // end click function
+            calculator(buttonValue);
+            betweenOperators(buttonValue);
+      }); // end click function
 
 
-    //animations
-    // $(function() {
-    //     $el.draggable();
-    //     $("#results, #mini").fadeTo(200, 0.1, function() {
-    //       $(this).fadeTo(100, 1);
-    //     });
-    //
-    //
-    //     $button.click(function () {
-    //       var hue = 'rgb(' + (Math.floor(Math.random() * 256)) + ',' + (Math.floor(Math.random() * 256)) + ',' + (Math.floor(Math.random() * 256)) + ')';
-    //
-    //       $("body").animate( {
-    //         backgroundColor: hue
-    //       }, 30000);
-    //     });
-    // });
+      //animations
+      // $(function() {
+      //     $el.draggable();
+      //     $("#results, #mini").fadeTo(200, 0.1, function() {
+      //       $(this).fadeTo(100, 1);
+      //     });
+      //
+      //
+      //     $button.click(function () {
+      //       var hue = 'rgb(' + (Math.floor(Math.random() * 256)) + ',' + (Math.floor(Math.random() * 256)) + ',' + (Math.floor(Math.random() * 256)) + ')';
+      //
+      //       $("body").animate( {
+      //         backgroundColor: hue
+      //       }, 30000);
+      //     });
+      // });
 
 }();
