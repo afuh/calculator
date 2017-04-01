@@ -3,6 +3,7 @@ var gulp          = require('gulp'),
     sass          = require('gulp-sass'),
     autoprefixer  = require('gulp-autoprefixer'),
     babel         = require("gulp-babel"),
+    uglify        = require('gulp-uglify'),
     plumber       = require("gulp-plumber");
 
 gulp.task('serve', ['sass', 'babel'], function() {
@@ -34,6 +35,7 @@ gulp.task('babel', function () {
     .pipe(babel({
       "presets": ["babel-preset-es2015"].map(require.resolve)
     }))
+    // .pipe(uglify())
     .pipe(gulp.dest("../"))
     .pipe(browserSync.stream());
 });
