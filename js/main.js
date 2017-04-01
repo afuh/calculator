@@ -1,10 +1,9 @@
 const app = (function(){
-  let calc = [],
-      display = [],
+  let check = [], // I use this array and 'operList' to check for possible bugs (i.e. dot repetition, operators repetition, etc.)
       operList = ["/", "*", "-", "+", "="],
+      display = [],
       divi = false;
 
-  //Used in the calculator function
   const evalue = {
         "prev": [],
         "next": [],
@@ -18,145 +17,88 @@ const app = (function(){
         }
   };
 
-  // Button data input
-  $(document).on("click", "button", function() {
-      //cache DOM
-      let buttonValue = $(this).data("value");
-      const $el = $("#calculator"),
-            $results = $el.find("#results"),
-            $mini = $el.find("#mini"),
-            $button = $el.find("button");
+  const calculator = (resu) => {
+        let prev,
+            next;
 
-      // Render content into the displays
-      const render = (miniD, bigD) => {
-            $mini.text(miniD);
-            $results.text(bigD);
-      }
-      //Clear All
-      const clearAll = () => {
-            calc = [];
-            divi = false;
-            evalue.prev = [], evalue.next = [], evalue.operador = ""
-            render(0, 0)
-      }
-      //Check for dots between operators
-      const betweenOperators = (n) => {
-            if (operList.indexOf(n) > -1) {
-                  divi = true;
-            }
-            else if (calc.join("").substr(-1) === ".") {
-                  divi = false;
-            }
-      }
-      //The calculator itself
-      const calculator = (val) => {
-        const n = (typeof val === "number" || val === "." || val === "0.");
+        resu.map((val) => {
+          const n = (typeof val === "number" || val === "." || val === "0.");
 
-            // A number, ".", or "0." will pass through here if there isn't an operator stored.
-            if (n && evalue.operator.length === 0) {
-              evalue.prev.push(val)
-            }
-            // Do the maths
-            else if (val === "=" && evalue.prev.length > 0 && evalue.next.length > 0) {
-              evalue.total = Math.round( evalue.operation[evalue.operator](parseFloat(evalue.prev.join("")), parseFloat(evalue.next.join(""))) * 100) / 100;
-              evalue.prev = [evalue.total], evalue.next = [], evalue.operator = "";
-              //render("", evalue.total)
-            }
-            // Check in the operator list, if it exist will through here
-            else if (operList.indexOf(val) >= 0) {
-              evalue.operator = val
-            }
-            // A number, ".", or "0." will pass through here if there is an operator.
-            else if (n && evalue.operator.length > 0) {
-              evalue.next.push(val)
-            }
-            // Reset the calculator
-            else if (val === "C") {
-              clearAll()
-            }
-            console.log("prev number: " + evalue.prev.join(""), "operator: " + evalue.operator, "next number: " + evalue.next.join(""));
-      }
-
-
-      // First digit must be a number
-       if (calc.length === 0 && operList.indexOf(buttonValue) > -1) {
-          buttonValue = "";
-          render("", "T_T")
-      }
-
-      // Convert to decimals
-      else if ((calc.length === 0 || operList.indexOf(calc.join("").substr(-1)) > -1) && buttonValue === ".") {
-          buttonValue = "0.";
-          calc = calc.concat(buttonValue);
-          display = calc.join("");
-          render(display);
-      }
-
-    //  evaluation, total and results
-      // else if (buttonValue === "=") {
-      //   divi = false;
-      //   display = evalue.total
-      //
-      //
-      //   if (display.toString().length <= 7) {
-      //     calc = [display];
-      //     render("", display);
-      //   }
-      //   else {
-      //       $mini.css("font-size", "14px");
-      //       render("to many numbers", "T_T");
-      //   }
-      // }
-
-      // prevent decimal repetition
-      else if (($results.text().includes(".") || calc.includes(".") || calc.includes("0.")) && divi === false && buttonValue === "." ) {
-          return;
-      }
-      // prevent zero repetition
-      else if (calc.length === 0 && buttonValue === 0) {
-          return;
-      }
-      // prevent operator repetition
-      else if (operList.includes(calc.join("").substr(-1)) && operList.indexOf(buttonValue) > -1) {
-          return;
-      }
-      // Screen max chars.
-      else if (display.length >= 15) {
-          calc = [];
-          display = [];
-      }
-
-      // join them all
-      else {
-          calc = calc.concat(buttonValue);
-          display = calc.join("");
-          render(display);
+          if (operList.indexOf(val) >= 0) {
+            evalue.operator = val;
+          }
+          else if (n && evalue.operator.length === 0) {
+            evalue.prev.push(val);
+          }
+          else if (n && evalue.operator.length > 0) {
+            evalue.next.push(val);
           }
 
+          prev = parseFloat(evalue.prev.join(""));
+          next = parseFloat(evalue.next.join(""));
+
+          console.log("prev: " + prev, "oper: " + evalue.operator, "next: " + next);
+            // evalue.prev = [evalue.total], evalue.next = [], evalue.operator = "";
+
+        });
+        // Do the maths
+      return Math.round( evalue.operation[evalue.operator](prev, next) * 100) / 100;
+  };
+
+  $(document).on("click", "button", function() {
+    let input = $(this).data("value");
+
+    const $el = $("#calculator"),
+          $results = $el.find("#results"),
+          $mini = $el.find("#mini");
+
+    const render = {
+          "bigD": (bigD) => { $results.text(bigD); },
+          "minD": (miniD) => { $mini.text(miniD); }
+    };
+
+    const clearAll = () => {
+          check = [];
+          evalue.prev = [], evalue.next = [], evalue.operator = "";
+          render.minD(0)
+          render.bigD(0)
+    }
+
+    const evaluation = (val) => {
+          if (input === "=") {
+            //check = check.slice(0, check.length - 1);
+            resuls()
+          }
+          else if (input === "C") {
+            clearAll();
+          }
+          else {
+            check = check.concat(val);
+            display = check.join("");
+            render.minD(display);
+          }
+    }
+
+    const resuls = () => {
+          display = calculator(check)
+
+          if (display.toString().length <= 7) {
+            check = [display];
+            render.minD("")
+            render.bigD(display)
+          }
+          else {
+            clearAll()
+            $mini.css("font-size", "14px");
+            render.minD("to many numbers");
+            render.bigD("T_T")
+          }
+
+          evalue.prev = [evalue.total], evalue.next = [], evalue.operator = "";
+    };
 
 
 
-    calculator(buttonValue)
-    betweenOperators(buttonValue)
-  }); // end click function
-
-
-  //animations
-  // $(function() {
-  //     $el.draggable();
-  //     $("#results, #mini").fadeTo(200, 0.1, function() {
-  //       $(this).fadeTo(100, 1);
-  //     });
-  //
-  //
-  //     $button.click(function () {
-  //       var hue = 'rgb(' + (Math.floor(Math.random() * 256)) + ',' + (Math.floor(Math.random() * 256)) + ',' + (Math.floor(Math.random() * 256)) + ')';
-  //
-  //       $("body").animate( {
-  //         backgroundColor: hue
-  //       }, 30000);
-  //     });
-  // });
-
-
+    evaluation(input)
+  });
 })();
