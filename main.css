@@ -15,7 +15,7 @@ input[type=number]::-webkit-outer-spin-button {
   text-decoration: none; }
 
 #calculator {
-  background-color: orange;
+  background-color: #f2a10d;
   border: 3px solid black;
   border-radius: 5px;
   height: 410px;
