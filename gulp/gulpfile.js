@@ -30,13 +30,13 @@ gulp.task('sass', function() {
 });
 
 gulp.task('babel', function () {
-  return gulp.src("../js/main.js")
+  return gulp.src("../main.js")
     .pipe(plumber())
     .pipe(babel({
       "presets": ["babel-preset-es2015"].map(require.resolve)
     }))
-    // .pipe(uglify())
-    .pipe(gulp.dest("../"))
+    .pipe(uglify())
+    .pipe(gulp.dest("../js/"))
     .pipe(browserSync.stream());
 });
 
