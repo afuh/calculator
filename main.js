@@ -1,15 +1,14 @@
 "use strict";
 
-// TODO: 5+= : NaN (debería ser 5+5)
-// TODO: Si clickeo dos veces == se bugea todo
 // TODO: 2.3 + 2.3 = 2.6 // en este caso puedo escribir 2.6.1
 // TODO: Resolver 5+5+5
 
 var app = function () {
+
   var check = [],
       // I use this array and 'operList' to check for possible bugs (i.e. dot repetition, operators repetition, etc.)
   input = 0,
-      oper = ["/", "*", "-", "+", "="],
+      oper = ["/", "*", "-", "+"],
       display = [],
       divi = false;
 
@@ -35,27 +34,30 @@ var app = function () {
     }
   };
   //The calculator. It receives an array and it maps that array in three grups 'prev, operator, next'. Then it uses the method 'evaulue.operation' to return the result.
-  var calculator = function calculator(resu) {
+  var calculator = function calculator(doMaths) {
     var prev = void 0,
         next = void 0;
+    console.log(doMaths.length);
+    if (doMaths.length <= 1) {
+      return;
+    } else {
+      doMaths.map(function (val) {
+        var n = typeof val === "number" || val === "." || val === "0.";
 
-    resu.map(function (val) {
-      var n = typeof val === "number" || val === "." || val === "0.";
+        if (oper.indexOf(val) >= 0) {
+          evalue.operator = val;
+        } else if (n && evalue.operator.length === 0) {
+          evalue.prev.push(val);
+        } else if (n && evalue.operator.length > 0) {
+          evalue.next.push(val);
+        }
 
-      if (oper.indexOf(val) >= 0) {
-        evalue.operator = val;
-      } else if (n && evalue.operator.length === 0) {
-        evalue.prev.push(val);
-      } else if (n && evalue.operator.length > 0) {
-        evalue.next.push(val);
-      }
+        prev = parseFloat(evalue.prev.join(""));
+        next = parseFloat(evalue.next.join(""));
 
-      prev = parseFloat(evalue.prev.join(""));
-      next = parseFloat(evalue.next.join(""));
-
-      console.log("prev: " + prev, "oper: " + evalue.operator, "next: " + next);
-      // evalue.prev = [evalue.total], evalue.next = [], evalue.operator = "";
-    });
+        console.log("prev: " + prev, "oper: " + evalue.operator, "next: " + next);
+      });
+    }
     // Do the maths
     return Math.round(evalue.operation[evalue.operator](prev, next) * 100) / 100;
   };
@@ -102,7 +104,9 @@ var app = function () {
     //Evaluate and prevent things
     var evaluation = function evaluation(val) {
       var lastInput = check.join("").substr(-1),
-          inputIsOperator = oper.indexOf(val) > -1;
+          inputIsOperator = oper.indexOf(val) > -1,
+          lastInputIsOperator = oper.indexOf(lastInput) > -1,
+          lastInputIsNumber = oper.indexOf(lastInput) === -1;
 
       //Check for dots between operators
       if (inputIsOperator) {
@@ -111,9 +115,12 @@ var app = function () {
         divi = false;
       }
 
-      if (input === "=") {
-        resuls();
-      } else if (input === "C") {
+      if (lastInputIsOperator && val === "=") {
+        check.push(check[0]);
+        results(check);
+      } else if (lastInputIsNumber && val === "=") {
+        results(check);
+      } else if (val === "C") {
         clearAll();
       }
       //First digit must be a number
@@ -126,7 +133,7 @@ var app = function () {
             return;
           }
           //Convert to 0.
-          else if ((check.length === 0 || oper.indexOf(lastInput) > -1) && val === ".") {
+          else if ((check.length === 0 || lastInputIsOperator) && val === ".") {
               input = "0.";
               check = check.concat(input);
               render.minD(check.join(""));
@@ -144,19 +151,21 @@ var app = function () {
                     check = [];
                     message.toManyNumbers();
                   }
-                  // If every test is passed, the charachter is displayed
+                  // If every test is passed, the values are displayed
                   else {
                       check = check.concat(val);
                       display = check.join("");
                       render.minD(display);
                     }
     };
-
-    var resuls = function resuls() {
-      display = calculator(check);
+    //Call the Calculator and watch for the length of the result
+    var results = function results(val) {
+      display = calculator(val);
       divi = false;
 
-      if (display.toString().length <= 7) {
+      if (typeof display === "undefined") {
+        return;
+      } else if (display.toString().length <= 7) {
         check = [display];
         render.bigD(display);
         //render.minD("")
