@@ -1,8 +1,6 @@
-// TODO: 2.3 + 2.3 = 2.6 // en este caso puedo escribir 2.6.1
-// TODO: Resolver 5+5+5
+// TODO: The results aren't always correct. It need more work and resolve this case: 2*2+2*2
 
 const app = (function(){
-
   let check = [], // I use this array and 'operList' to check for possible bugs (i.e. dot repetition, operators repetition, etc.)
       input = 0,
       oper = ["/", "*", "-", "+"],
@@ -23,41 +21,48 @@ const app = (function(){
         }
   };
   //The calculator. It receives an array and it maps that array in three grups 'prev, operator, next'. Then it uses the method 'evaulue.operation' to return the result.
-  const calculator = (doMaths) => {
-        let prev,
-            next;
-        console.log(doMaths.length)
-        if (doMaths.length <= 1) {
-          return
+  const calculate = (calc) => {
+      let prev,
+          next,
+          opera = false;
+
+      if (calc.length <= 1) {
+        return;
+      }
+      else {
+       calc.map((val) => {
+        const n = (typeof val === "number" || val === "." || val === "0.");
+
+        if (!opera && oper.indexOf(val) >= 0) {
+          evalue.operator = val;
+          opera = true;
         }
-        else {
-          doMaths.map((val) => {
-            const n = (typeof val === "number" || val === "." || val === "0.");
-
-            if (oper.indexOf(val) >= 0) {
-              evalue.operator = val;
-            }
-            else if (n && evalue.operator.length === 0) {
-              evalue.prev.push(val);
-            }
-            else if (n && evalue.operator.length > 0) {
-              evalue.next.push(val);
-            }
-
-            prev = parseFloat(evalue.prev.join(""));
-            next = parseFloat(evalue.next.join(""));
-
-            console.log("prev: " + prev, "oper: " + evalue.operator, "next: " + next);
-
-          });
+        else if (opera && oper.indexOf(val) >= 0) {
+          evalue.total = Math.round( evalue.operation[evalue.operator](prev, next) * 100) / 100;
+          evalue.operator = val;
+          evalue.prev = [evalue.total];
+          evalue.next = [];
         }
-        // Do the maths
-      return Math.round( evalue.operation[evalue.operator](prev, next) * 100) / 100;
+        else if (n && !opera) {
+          evalue.prev.push(val);
+        }
+        else if (n && opera) {
+          evalue.next.push(val);
+        }
+
+        prev = parseFloat(evalue.prev.join(""));
+        next = parseFloat(evalue.next.join(""));
+
+        console.log("prev: " + prev, "oper: " + evalue.operator, "next: " + next);
+      });
+    }
+    evalue.total = Math.round( evalue.operation[evalue.operator](prev, next) * 100) / 100;
+    return evalue.total
   };
 
   // Button data input
   $(document).on("click", "button", function() {
-    //Value of each button
+    //Hold the values of each button
     input = $(this).data("value");
 
     //cache DOM
@@ -73,7 +78,7 @@ const app = (function(){
     const clearAll = () => {
           check = [];
           divi = false;
-          evalue.prev = [], evalue.next = [], evalue.operator = "";
+          evalue.prev = []; evalue.next = []; evalue.operator = "";
           render.bigD(0)
           render.minD(0)
     };
@@ -97,21 +102,22 @@ const app = (function(){
               lastInputIsOperator = oper.indexOf(lastInput) > -1,
               lastInputIsNumber = oper.indexOf(lastInput) === -1;
 
-              //Check for dots between operators
-              if (inputIsOperator) {
-                    divi = true;
-              }
-              else if (lastInput === ".") {
-                    divi = false;
-              }
-
-          if (lastInputIsOperator && val === "="){
-            check.push(check[0]);
-            results(check);
+          //Check for dots between operators
+          if (inputIsOperator) {
+                divi = true;
           }
+          else if (lastInput === ".") {
+                divi = false;
+          }
+          //Preven +=
+          if (lastInputIsOperator && val === "="){
+            return;
+          }
+          //Only when the last input is a Naumber call for a calucation.
           else if (lastInputIsNumber && val === "=") {
             results(check);
           }
+          //Clear all
           else if (val === "C") {
             clearAll();
           }
@@ -131,7 +137,7 @@ const app = (function(){
             render.minD(check.join(""));
           }
           //prevent decimal repetition
-          else if ((evalue.prev.includes(".") || check.includes(".") || check.includes("0.")) && divi === false && val === "." ) {
+          else if (!divi && val === "." && (evalue.total.toString().includes(".") || check.includes(".") || check.includes("0."))) {
             return;
           }
           // prevent zero repetition
@@ -152,8 +158,8 @@ const app = (function(){
     };
     //Call the Calculator and watch for the length of the result
     const results = (val) => {
-          display = calculator(val);
-          divi = false
+          divi = false;
+          display = calculate(val);
 
           if (typeof display === "undefined") {
             return;
@@ -161,41 +167,39 @@ const app = (function(){
           else if (display.toString().length <= 7) {
             check = [display];
             render.bigD(display);
-            //render.minD("")
           }
           else {
             clearAll()
             message.toManyNumbers();
           }
-          evalue.prev = [evalue.total], evalue.next = [], evalue.operator = ""
+          evalue.prev = []; evalue.next = []; evalue.operator = "";
     };
-
-
     evaluation(input);
   });
 
 
 
   //animations
-  // $(function() {
-  //     const $el = $("#calculator"),
-  //           $results = $el.find("#results"),
-  //           $button = $el.find("button");
-  //
-  //     $el.draggable();
-  //
-  //     $results.fadeTo(200, 0.1, function() {
-  //       $(this).fadeTo(100, 1);
-  //     });
-  //
-  //     $button.click(() => {
-  //       const hue = 'rgb(' + (Math.floor(Math.random() * 256)) + ',' + (Math.floor(Math.random() * 256)) + ',' + (Math.floor(Math.random() * 256)) + ')';
-  //
-  //       $("body").animate( {
-  //         backgroundColor: hue
-  //       }, 30000);
-  //     });
-  // });
+  $(function() {
+      const $el = $("#calculator"),
+            $results = $el.find("#results"),
+            $button = $el.find("button");
+
+      $el.draggable();
+      $results.fadeTo(200, 0.1, function() {
+        $(this).fadeTo(820, 1);
+      });
+      $button.click(() => {
+        const randomR = (Math.floor(Math.random() * 256)),
+              randomG = (Math.floor(Math.random() * 256)),
+              randomB = (Math.floor(Math.random() * 256)),
+              hue = 'rgb(' + randomR + ',' + randomG + ',' + randomB + ')';
+
+        $("body").animate( {
+          backgroundColor: hue
+        }, 30000);
+      });
+  });
 
 
 })();
